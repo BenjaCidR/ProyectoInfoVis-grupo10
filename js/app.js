@@ -2,9 +2,16 @@
 // app.js — Visualización combinada Real Madrid vs FC Barcelona
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Colores para el gráfico base (líneas): color único por equipo
+const COLORES_MAIN = {
+    realMadrid: { local: '#005A9F', visita: '#005A9F' },
+    barcelona:  { local: '#A50044', visita: '#A50044' }
+};
+
+// Colores para los sidebars: RM sin cambio, FCB visita en rojo más claro
 const COLORES = {
     realMadrid: { local: '#005A9F', visita: '#00a8ff' },
-    barcelona:  { local: '#A50044', visita: '#004D98' }
+    barcelona:  { local: '#A50044', visita: '#E8537A' }
 };
 
 const SIDEBAR_WIDTH = 340;
@@ -67,15 +74,36 @@ const inlineLabelPlugin = {
     id: 'inlineLabel',
     afterDatasetsDraw(chart) {
         const { ctx } = chart;
+        const MIN_GAP = 14; // mínimo de píxeles entre etiquetas
+
+        // Recopilar posiciones originales
+        const entries = [];
         chart.data.datasets.forEach((dataset, i) => {
             const meta = chart.getDatasetMeta(i);
             if (!meta.visible || !meta.data.length) return;
             const lastPoint = meta.data[meta.data.length - 1];
+            entries.push({ dataset, x: lastPoint.x + 8, y: lastPoint.y });
+        });
+
+        // Ordenar por y para aplicar separación de arriba a abajo
+        entries.sort((a, b) => a.y - b.y);
+
+        // Ajustar posiciones para evitar solapamientos
+        for (let i = 1; i < entries.length; i++) {
+            const prev = entries[i - 1];
+            const curr = entries[i];
+            if (curr.y - prev.y < MIN_GAP) {
+                curr.y = prev.y + MIN_GAP;
+            }
+        }
+
+        // Dibujar etiquetas con posiciones ajustadas
+        entries.forEach(({ dataset, x, y }) => {
             ctx.save();
             ctx.font         = 'bold 11px "Segoe UI", sans-serif';
             ctx.fillStyle    = dataset.borderColor;
             ctx.textBaseline = 'middle';
-            ctx.fillText(dataset.label, lastPoint.x + 8, lastPoint.y);
+            ctx.fillText(dataset.label, x, y);
             ctx.restore();
         });
     }
@@ -95,32 +123,32 @@ function inicializarGrafico(matchData, sidebarRM, sidebarFCB, mainContent) {
                 {
                     label: 'RM Local',
                     data: matchData.realMadrid.map(d => d.local),
-                    borderColor: COLORES.realMadrid.local,
-                    backgroundColor: COLORES.realMadrid.local,
+                    borderColor: COLORES_MAIN.realMadrid.local,
+                    backgroundColor: COLORES_MAIN.realMadrid.local,
                     borderWidth: 2.5, tension: 0.3,
                     pointRadius: 5, pointHoverRadius: 9, borderDash: []
                 },
                 {
                     label: 'RM Visita',
                     data: matchData.realMadrid.map(d => d.visita),
-                    borderColor: COLORES.realMadrid.visita,
-                    backgroundColor: COLORES.realMadrid.visita,
+                    borderColor: COLORES_MAIN.realMadrid.visita,
+                    backgroundColor: COLORES_MAIN.realMadrid.visita,
                     borderWidth: 2, tension: 0.3,
                     pointRadius: 5, pointHoverRadius: 9, borderDash: [6, 4]
                 },
                 {
                     label: 'FCB Local',
                     data: matchData.barcelona.map(d => d.local),
-                    borderColor: COLORES.barcelona.local,
-                    backgroundColor: COLORES.barcelona.local,
+                    borderColor: COLORES_MAIN.barcelona.local,
+                    backgroundColor: COLORES_MAIN.barcelona.local,
                     borderWidth: 2.5, tension: 0.3,
                     pointRadius: 5, pointHoverRadius: 9, borderDash: []
                 },
                 {
                     label: 'FCB Visita',
                     data: matchData.barcelona.map(d => d.visita),
-                    borderColor: COLORES.barcelona.visita,
-                    backgroundColor: COLORES.barcelona.visita,
+                    borderColor: COLORES_MAIN.barcelona.visita,
+                    backgroundColor: COLORES_MAIN.barcelona.visita,
                     borderWidth: 2, tension: 0.3,
                     pointRadius: 5, pointHoverRadius: 9, borderDash: [6, 4]
                 }
@@ -144,7 +172,7 @@ function inicializarGrafico(matchData, sidebarRM, sidebarFCB, mainContent) {
             },
             scales: {
                 y: {
-                    beginAtZero: true, max: 80,
+                    beginAtZero: false, min: 20, max: 70,
                     title: { display: true, text: 'Goles totales' }
                 }
             },
