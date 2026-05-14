@@ -8,18 +8,56 @@
 </head>
 <body>
 
-    <!-- ── Sidebar emergente (izquierda = RM, derecha = FCB vía JS) ─────── -->
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <h3 id="panel-title">Detalle de temporada</h3>
-            <button class="close-btn" id="close-btn">✕</button>
+    <!-- ── Sidebar izquierda (Real Madrid) ─────────────────────────────── -->
+    <div class="sidebar sidebar-left" id="sidebar-rm">
+        <div class="sidebar-header sidebar-header-rm">
+            <img src="img/logo_rm.png" alt="Real Madrid" class="sidebar-logo">
+            <h3 id="panel-title-rm">Real Madrid</h3>
+            <button class="close-btn" id="close-btn-rm">✕</button>
         </div>
         <div class="sidebar-content">
-            <div class="stats-card" id="stats-container">
+            <!-- Stats de goles -->
+            <div class="stats-card stats-card-rm" id="stats-container-rm">
                 <p>Haz clic en un punto del gráfico para ver el detalle.</p>
             </div>
+
+            <!-- Gráfico de barras: goles local vs visita -->
+            <p class="chart-label chart-label-rm">Goles: Local vs Visita</p>
             <div class="chart-container-small">
-                <canvas id="detailChart"></canvas>
+                <canvas id="detailChartRM"></canvas>
+            </div>
+
+            <!-- Gráfico de consistencia ofensiva -->
+            <p class="chart-label chart-label-rm">Consistencia Ofensiva</p>
+            <div class="chart-container-consistencia">
+                <canvas id="consistenciaChartRM"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Sidebar derecha (FC Barcelona) ──────────────────────────────── -->
+    <div class="sidebar sidebar-right" id="sidebar-fcb">
+        <div class="sidebar-header sidebar-header-fcb">
+            <img src="img/logo_fcb.png" alt="FC Barcelona" class="sidebar-logo">
+            <h3 id="panel-title-fcb">FC Barcelona</h3>
+            <button class="close-btn" id="close-btn-fcb">✕</button>
+        </div>
+        <div class="sidebar-content">
+            <!-- Stats de goles -->
+            <div class="stats-card stats-card-fcb" id="stats-container-fcb">
+                <p>Haz clic en un punto del gráfico para ver el detalle.</p>
+            </div>
+
+            <!-- Gráfico de barras: goles local vs visita -->
+            <p class="chart-label chart-label-fcb">Goles: Local vs Visita</p>
+            <div class="chart-container-small">
+                <canvas id="detailChartFCB"></canvas>
+            </div>
+
+            <!-- Gráfico de consistencia ofensiva -->
+            <p class="chart-label chart-label-fcb">Consistencia Ofensiva</p>
+            <div class="chart-container-consistencia">
+                <canvas id="consistenciaChartFCB"></canvas>
             </div>
         </div>
     </div>
@@ -27,33 +65,24 @@
     <!-- ── Contenido principal ──────────────────────────────────────────── -->
     <div class="main-content" id="main-content">
         <header>
-            <h1>Impacto de la Localía</h1>
-            <p>Real Madrid vs FC Barcelona · LaLiga 2016–2022</p>
-            <p>Haz clic en cualquier punto de los gráficos para ver el detalle de esa temporada.</p>
+            <div class="header-logos">
+                <img src="img/logo_rm.png" alt="Real Madrid" class="header-logo">
+                <div class="header-text">
+                    <h1>Impacto de la Localía</h1>
+                    <p>Real Madrid vs FC Barcelona · LaLiga 2016–2022</p>
+                    <p>Haz clic en cualquier punto del gráfico para ver el detalle de esa temporada.</p>
+                </div>
+                <img src="img/logo_fcb.png" alt="FC Barcelona" class="header-logo">
+            </div>
         </header>
 
-        <div class="charts-wrapper">
-
-            <!-- Gráfico Real Madrid — sidebar abre a la izquierda -->
-            <div class="chart-box">
-                <h3>⚽ Real Madrid</h3>
-                <div class="canvas-wrapper">
-                    <canvas id="chartRM"></canvas>
-                </div>
+        <div class="chart-box">
+            <div class="canvas-wrapper">
+                <canvas id="chartCombinado"></canvas>
             </div>
-
-            <!-- Gráfico FC Barcelona — sidebar abre a la derecha -->
-            <div class="chart-box">
-                <h3>⚽ FC Barcelona</h3>
-                <div class="canvas-wrapper">
-                    <canvas id="chartFCB"></canvas>
-                </div>
-            </div>
-
         </div>
     </div>
 
-    <!-- Chart.js debe ir antes que app.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="js/app.js" defer></script>
 

@@ -1,202 +1,251 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// app.js — Visualización interactiva de localía Real Madrid vs FC Barcelona
+// app.js — Visualización combinada Real Madrid vs FC Barcelona
 // ─────────────────────────────────────────────────────────────────────────────
 
-let detailChartInstance = null;
-
-// Paletas de colores por equipo
 const COLORES = {
     realMadrid: { local: '#005A9F', visita: '#00a8ff' },
     barcelona:  { local: '#A50044', visita: '#004D98' }
 };
 
-// Opciones visuales compartidas para los gráficos de línea
-const commonOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: { mode: 'index', intersect: false },
-    plugins: {
-        legend: { position: 'top' },
-        tooltip: {
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            titleColor: '#333',
-            bodyColor: '#666',
-            borderColor: '#ddd',
-            borderWidth: 1
-        }
-    },
-    scales: {
-        y: {
-            beginAtZero: true,
-            max: 80,
-            title: { display: true, text: 'Goles Totales' }
-        }
+const SIDEBAR_WIDTH = 340;
+
+const state = { rmOpen: false, fcbOpen: false };
+
+// Instancias Chart.js activas (para destruir antes de recrear)
+const detailInstances = {};
+
+// ─── Recalcular márgenes del main-content ─────────────────────────────────────
+function actualizarMargenes(mainContent) {
+    if (window.innerWidth <= 768) {
+        mainContent.style.marginLeft  = '';
+        mainContent.style.marginRight = '';
+        return;
     }
-};
+    mainContent.style.marginLeft  = state.rmOpen  ? `${SIDEBAR_WIDTH}px` : '';
+    mainContent.style.marginRight = state.fcbOpen ? `${SIDEBAR_WIDTH}px` : '';
+}
 
-// ─── Inicialización principal ─────────────────────────────────────────────────
+// ─── Inicialización ───────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-
-    const sidebar     = document.getElementById('sidebar');
-    const closeBtn    = document.getElementById('close-btn');
+    const sidebarRM   = document.getElementById('sidebar-rm');
+    const sidebarFCB  = document.getElementById('sidebar-fcb');
     const mainContent = document.getElementById('main-content');
 
-    // Cerrar sidebar: quita clases y libera márgenes
-    closeBtn.addEventListener('click', () => {
-        sidebar.classList.remove('active', 'sidebar-right', 'sidebar-fcb');
-        mainContent.style.marginLeft  = '';   // deja que CSS.margin:auto recentre
-        mainContent.style.marginRight = '';
+    document.getElementById('close-btn-rm').addEventListener('click', () => {
+        sidebarRM.classList.remove('active');
+        state.rmOpen = false;
+        actualizarMargenes(mainContent);
     });
 
-    // Cargar datos desde el JSON generado por el notebook
+    document.getElementById('close-btn-fcb').addEventListener('click', () => {
+        sidebarFCB.classList.remove('active');
+        state.fcbOpen = false;
+        actualizarMargenes(mainContent);
+    });
+
     fetch('data/data.json')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`No se pudo cargar data.json (HTTP ${response.status})`);
-            }
-            return response.json();
+        .then(r => {
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            return r.json();
         })
-        .then(matchData => {
-            inicializarGraficos(matchData, sidebar, mainContent);
-        })
-        .catch(error => {
-            console.error('Error al cargar los datos:', error);
+        .then(matchData => inicializarGrafico(matchData, sidebarRM, sidebarFCB, mainContent))
+        .catch(err => {
+            console.error(err);
             mainContent.innerHTML = `
-                <div style="text-align:center; padding: 3rem; color: #c0392b;">
+                <div style="text-align:center;padding:3rem;color:#c0392b;">
                     <h2>⚠️ Error al cargar los datos</h2>
-                    <p>${error.message}</p>
-                    <p style="font-size:0.85rem; color:#888;">
+                    <p>${err.message}</p>
+                    <p style="font-size:.85rem;color:#888;">
                         Asegúrate de que <code>data/data.json</code> existe y el servidor está activo.
                     </p>
                 </div>`;
         });
 });
 
-// ─── Construcción de los gráficos ─────────────────────────────────────────────
-function inicializarGraficos(matchData, sidebar, mainContent) {
-    const labels = matchData.realMadrid.map(d => d.temporada);
+// ─── Plugin: etiquetas inline al final de cada línea ─────────────────────────
+const inlineLabelPlugin = {
+    id: 'inlineLabel',
+    afterDatasetsDraw(chart) {
+        const { ctx } = chart;
+        chart.data.datasets.forEach((dataset, i) => {
+            const meta = chart.getDatasetMeta(i);
+            if (!meta.visible || !meta.data.length) return;
+            const lastPoint = meta.data[meta.data.length - 1];
+            ctx.save();
+            ctx.font         = 'bold 11px "Segoe UI", sans-serif';
+            ctx.fillStyle    = dataset.borderColor;
+            ctx.textBaseline = 'middle';
+            ctx.fillText(dataset.label, lastPoint.x + 8, lastPoint.y);
+            ctx.restore();
+        });
+    }
+};
 
-    // ── Gráfico Real Madrid (sidebar abre a la IZQUIERDA) ─────────────────────
-    const ctxRM = document.getElementById('chartRM').getContext('2d');
-    new Chart(ctxRM, {
+// ─── Gráfico de líneas combinado ──────────────────────────────────────────────
+function inicializarGrafico(matchData, sidebarRM, sidebarFCB, mainContent) {
+    const labels = matchData.realMadrid.map(d => d.temporada);
+    const ctx    = document.getElementById('chartCombinado').getContext('2d');
+
+    new Chart(ctx, {
         type: 'line',
+        plugins: [inlineLabelPlugin],
         data: {
             labels,
             datasets: [
                 {
-                    label: 'De Local',
+                    label: 'RM Local',
                     data: matchData.realMadrid.map(d => d.local),
                     borderColor: COLORES.realMadrid.local,
                     backgroundColor: COLORES.realMadrid.local,
-                    tension: 0.3,
-                    pointHoverRadius: 8
+                    borderWidth: 2.5, tension: 0.3,
+                    pointRadius: 5, pointHoverRadius: 9, borderDash: []
                 },
                 {
-                    label: 'De Visita',
+                    label: 'RM Visita',
                     data: matchData.realMadrid.map(d => d.visita),
                     borderColor: COLORES.realMadrid.visita,
                     backgroundColor: COLORES.realMadrid.visita,
-                    borderDash: [5, 5],
-                    tension: 0.3
-                }
-            ]
-        },
-        options: {
-            ...commonOptions,
-            onHover: (event, chartElement) => {
-                event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
-            },
-            onClick: (event, elements) => {
-                if (elements.length > 0) {
-                    const seasonData = matchData.realMadrid[elements[0].index];
-                    openSidebar(seasonData, 'Real Madrid', 'izquierda', sidebar, mainContent);
-                }
-            }
-        }
-    });
-
-    // ── Gráfico FC Barcelona (sidebar abre a la DERECHA) ──────────────────────
-    const ctxFCB = document.getElementById('chartFCB').getContext('2d');
-    new Chart(ctxFCB, {
-        type: 'line',
-        data: {
-            labels,
-            datasets: [
+                    borderWidth: 2, tension: 0.3,
+                    pointRadius: 5, pointHoverRadius: 9, borderDash: [6, 4]
+                },
                 {
-                    label: 'De Local',
+                    label: 'FCB Local',
                     data: matchData.barcelona.map(d => d.local),
                     borderColor: COLORES.barcelona.local,
                     backgroundColor: COLORES.barcelona.local,
-                    tension: 0.3,
-                    pointHoverRadius: 8
+                    borderWidth: 2.5, tension: 0.3,
+                    pointRadius: 5, pointHoverRadius: 9, borderDash: []
                 },
                 {
-                    label: 'De Visita',
+                    label: 'FCB Visita',
                     data: matchData.barcelona.map(d => d.visita),
                     borderColor: COLORES.barcelona.visita,
                     backgroundColor: COLORES.barcelona.visita,
-                    borderDash: [5, 5],
-                    tension: 0.3
+                    borderWidth: 2, tension: 0.3,
+                    pointRadius: 5, pointHoverRadius: 9, borderDash: [6, 4]
                 }
             ]
         },
         options: {
-            ...commonOptions,
-            onHover: (event, chartElement) => {
-                event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            layout: { padding: { right: 90 } },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(255,255,255,0.95)',
+                    titleColor: '#333', bodyColor: '#555',
+                    borderColor: '#ddd', borderWidth: 1,
+                    callbacks: {
+                        label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y} goles`
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true, max: 80,
+                    title: { display: true, text: 'Goles totales' }
+                }
+            },
+            onHover: (event, el) => {
+                event.native.target.style.cursor = el.length ? 'pointer' : 'default';
             },
             onClick: (event, elements) => {
-                if (elements.length > 0) {
-                    const seasonData = matchData.barcelona[elements[0].index];
-                    openSidebar(seasonData, 'FC Barcelona', 'derecha', sidebar, mainContent);
-                }
+                if (!elements.length) return;
+                const idx = elements[0].index;
+                abrirAmbosDetalles(
+                    matchData.realMadrid[idx],
+                    matchData.barcelona[idx],
+                    sidebarRM, sidebarFCB, mainContent
+                );
             }
         }
     });
 }
 
-// ─── Sidebar ──────────────────────────────────────────────────────────────────
-function openSidebar(data, nombreEquipo, lado, sidebar, mainContent) {
+// ─── Categorizar goles (igual que el notebook) ────────────────────────────────
+function categorizarGoles(g) {
+    g = parseInt(g);
+    if (g === 0) return '0 goles';
+    if (g === 1) return '1 gol';
+    if (g === 2) return '2 goles';
+    return '3+ goles';
+}
+
+// ─── Calcular distribución de consistencia ofensiva ──────────────────────────
+// Lee data.partidosDetalle: array de { condicion: 'local'|'visita', goles: N }
+// generado directamente desde los archivos Excel de LaLiga.
+function calcularConsistencia(data) {
+    const orden = ['0 goles', '1 gol', '2 goles', '3+ goles'];
+    const distLocal  = Object.fromEntries(orden.map(k => [k, 0]));
+    const distVisita = Object.fromEntries(orden.map(k => [k, 0]));
+
+    if (Array.isArray(data.partidosDetalle)) {
+        data.partidosDetalle.forEach(p => {
+            const cat = categorizarGoles(p.goles);
+            if (p.condicion === 'local') distLocal[cat]++;
+            else                         distVisita[cat]++;
+        });
+    }
+
+    return {
+        labels: orden,
+        local:  orden.map(k => distLocal[k]),
+        visita: orden.map(k => distVisita[k])
+    };
+}
+
+// ─── Abrir ambos sidebars ─────────────────────────────────────────────────────
+function abrirAmbosDetalles(dataRM, dataFCB, sidebarRM, sidebarFCB, mainContent) {
+    // 1. Texto estadístico
+    renderSidebarContent(dataRM,  'Real Madrid',  'panel-title-rm',  'stats-container-rm',  COLORES.realMadrid);
+    renderSidebarContent(dataFCB, 'FC Barcelona', 'panel-title-fcb', 'stats-container-fcb', COLORES.barcelona);
+
+    // 2. Gráfico de barras: goles totales Local vs Visita
+    renderDetailChart('detailChartRM',  dataRM.local,  dataRM.visita,  COLORES.realMadrid, 'detailChartRM');
+    renderDetailChart('detailChartFCB', dataFCB.local, dataFCB.visita, COLORES.barcelona,  'detailChartFCB');
+
+    // 3. Activar sidebars
+    sidebarRM.classList.add('active');
+    sidebarFCB.classList.add('active');
+    state.rmOpen  = true;
+    state.fcbOpen = true;
+    actualizarMargenes(mainContent);
+
+    // 4. Gráfico de consistencia ofensiva — renderizar tras 50ms para
+    //    garantizar que el canvas ya tiene dimensiones reales (transición CSS)
+    const consistenciaRM  = calcularConsistencia(dataRM);
+    const consistenciaFCB = calcularConsistencia(dataFCB);
+    setTimeout(() => {
+        renderConsistenciaChart('consistenciaChartRM',  consistenciaRM,  COLORES.realMadrid, 'consistenciaRM');
+        renderConsistenciaChart('consistenciaChartFCB', consistenciaFCB, COLORES.barcelona,  'consistenciaFCB');
+    }, 50);
+}
+
+// ─── Contenido de texto del sidebar ──────────────────────────────────────────
+function renderSidebarContent(data, nombre, titleId, containerId, colores) {
     const diferencia = data.local - data.visita;
     const diffTexto  = diferencia > 0 ? `+${diferencia}` : `${diferencia}`;
     const diffColor  = diferencia > 0 ? '#27ae60' : diferencia < 0 ? '#c0392b' : '#888';
-    const esFCB      = lado === 'derecha';
 
-    // Actualizar textos
-    document.getElementById('panel-title').innerText = `${nombreEquipo} — ${data.temporada}`;
-    document.getElementById('stats-container').innerHTML = `
+    document.getElementById(titleId).innerText = `${nombre} — ${data.temporada}`;
+    document.getElementById(containerId).innerHTML = `
         <p>🏠 <strong>De local:</strong> ${data.local} goles en ${data.partidos} partidos
            <em>(${data.promedioLocal} goles/partido)</em></p>
         <p>✈️ <strong>De visita:</strong> ${data.visita} goles en ${data.partidos} partidos
            <em>(${data.promedioVisita} goles/partido)</em></p>
         <p>📊 <strong>Diferencia de localía:</strong>
-           <span style="color:${diffColor}; font-weight:bold;">${diffTexto} goles</span></p>
+           <span style="color:${diffColor};font-weight:bold;">${diffTexto} goles</span></p>
     `;
-
-    // Colores del gráfico de barras según el equipo
-    const colores = esFCB ? COLORES.barcelona : COLORES.realMadrid;
-    renderDetailChart(data.local, data.visita, colores);
-
-    // Aplicar clases de posición y color
-    sidebar.classList.remove('sidebar-right', 'sidebar-fcb');   // limpiar estado anterior
-    if (esFCB) {
-        sidebar.classList.add('sidebar-right', 'sidebar-fcb');
-    }
-    sidebar.classList.add('active');
-
-    // Empujar el contenido solo en pantallas grandes
-    if (window.innerWidth > 768) {
-        mainContent.style.marginLeft  = esFCB ? ''      : '380px';
-        mainContent.style.marginRight = esFCB ? '380px' : '';
-    }
 }
 
-// ─── Gráfico de barras del detalle ────────────────────────────────────────────
-function renderDetailChart(local, visita, colores) {
-    const ctx = document.getElementById('detailChart').getContext('2d');
-    if (detailChartInstance) detailChartInstance.destroy();
+// ─── Gráfico 1: goles totales Local vs Visita ────────────────────────────────
+function renderDetailChart(canvasId, local, visita, colores, instanceKey) {
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    if (detailInstances[instanceKey]) detailInstances[instanceKey].destroy();
 
-    detailChartInstance = new Chart(ctx, {
+    detailInstances[instanceKey] = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: ['Local', 'Visita'],
@@ -212,6 +261,57 @@ function renderDetailChart(local, visita, colores) {
             maintainAspectRatio: false,
             plugins: { legend: { display: false } },
             scales: { y: { beginAtZero: true, max: 80 } }
+        }
+    });
+}
+
+// ─── Gráfico 2: consistencia ofensiva (distribución de goles por partido) ─────
+function renderConsistenciaChart(canvasId, consistencia, colores, instanceKey) {
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    if (detailInstances[instanceKey]) detailInstances[instanceKey].destroy();
+
+    detailInstances[instanceKey] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: consistencia.labels,
+            datasets: [
+                {
+                    label: 'Local',
+                    data: consistencia.local,
+                    backgroundColor: colores.local,
+                    borderRadius: 4
+                },
+                {
+                    label: 'Visita',
+                    data: consistencia.visita,
+                    backgroundColor: colores.visita,
+                    borderRadius: 4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: { font: { size: 10 }, boxWidth: 12, padding: 8 }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y} partidos`
+                    }
+                }
+            },
+            scales: {
+                x: { ticks: { font: { size: 10 } } },
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Partidos', font: { size: 10 } },
+                    ticks: { stepSize: 1, font: { size: 10 } }
+                }
+            }
         }
     });
 }
