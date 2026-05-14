@@ -1,0 +1,136 @@
+/* ─── Variables de color y tipografía ────────────────────────────────────── */
+:root {
+    --bg-color:      #f4f7f6;
+    --text-color:    #333;
+
+    /* Real Madrid */
+    --rm-local:      #005A9F;
+    --rm-visita:     #00a8ff;
+
+    /* FC Barcelona — colores blaugrana reales */
+    --fcb-local:     #A50044;
+    --fcb-visita:    #004D98;
+
+    --sidebar-bg:    #ffffff;
+    --sidebar-width: 380px;
+    --shadow:        0 4px 20px rgba(0,0,0,0.1);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    overflow-x: hidden;
+}
+
+/* ─── Contenido principal ─────────────────────────────────────────────────── */
+.main-content {
+    transition: margin-left 0.4s ease, margin-right 0.4s ease;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+header { text-align: center; margin-bottom: 2rem; }
+header p { color: #666; font-size: 0.95rem; margin-top: 0.5rem; }
+
+/* ─── Gráficos ────────────────────────────────────────────────────────────── */
+.charts-wrapper { display: flex; flex-direction: column; gap: 2rem; }
+
+.chart-box {
+    background: #fff;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+}
+.chart-box h3 { margin-bottom: 1rem; color: #444; }
+.canvas-wrapper { position: relative; height: 300px; width: 100%; }
+
+/* ─── Sidebar base (izquierda — Real Madrid) ──────────────────────────────── */
+.sidebar {
+    position: fixed;
+    left: calc(var(--sidebar-width) * -1); /* oculto fuera de pantalla */
+    right: auto;
+    top: 0;
+    width: var(--sidebar-width);
+    height: 100vh;
+    background: var(--sidebar-bg);
+    box-shadow: var(--shadow);
+    transition: left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
+                right 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Sidebar izquierda activo */
+.sidebar.active {
+    left: 0;
+}
+
+/* ─── Sidebar derecha (FC Barcelona) ─────────────────────────────────────── */
+.sidebar.sidebar-right {
+    left: auto;
+    right: calc(var(--sidebar-width) * -1); /* oculto por la derecha */
+}
+
+.sidebar.sidebar-right.active {
+    left: auto;
+    right: 0;
+}
+
+/* ─── Cabecera del sidebar — color por equipo ─────────────────────────────── */
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    background: var(--rm-local);   /* azul Real Madrid por defecto */
+    color: white;
+}
+
+/* Cuando el sidebar es del Barcelona cambia el color de cabecera */
+.sidebar.sidebar-fcb .sidebar-header {
+    background: var(--fcb-local);  /* rojo blaugrana */
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.close-btn:hover { transform: scale(1.1); }
+
+/* ─── Contenido del sidebar ───────────────────────────────────────────────── */
+.sidebar-content { padding: 1.5rem; overflow-y: auto; }
+
+.stats-card {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid var(--rm-local);   /* azul RM por defecto */
+}
+
+/* Borde del stats-card en color Barcelona */
+.sidebar.sidebar-fcb .stats-card {
+    border-left: 4px solid var(--fcb-local);
+}
+
+.stats-card p { margin-bottom: 0.8rem; font-size: 0.95rem; line-height: 1.4; }
+.stats-card strong { color: var(--rm-local); }
+
+.sidebar.sidebar-fcb .stats-card strong {
+    color: var(--fcb-local);
+}
+
+.chart-container-small { position: relative; height: 250px; width: 100%; }

@@ -1,1 +1,11 @@
 .DS_Store
+# Jupyter
+.ipynb_checkpoints/
+__pycache__/
+
+# Entornos virtuales
+.env
+venv/
+
+# macOS
+.DS_Store

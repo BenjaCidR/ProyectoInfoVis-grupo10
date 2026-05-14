@@ -4,56 +4,58 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Impacto de la Localía - Visualización</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 40px;
-            background-color: #f4f4f9;
-            color: #333;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .container {
-            background-color: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            max-width: 900px;
-            width: 100%;
-        }
-        h1 {
-            text-align: center;
-            color: #2c3e50;
-        }
-        .grafico-img {
-            width: 100%;
-            height: auto;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            margin: 20px 0;
-        }
-        .analisis {
-            font-size: 16px;
-            line-height: 1.6;
-        }
-    </style>
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
-    <div class="container">
-        <h1>Impacto de la Localía: Real Madrid vs FC Barcelona</h1>
-        
-        <img src="img/grafico_localia.png" alt="Gráfico de Evolución de Goles de Local" class="grafico-img">
-        
-        <div class="analisis">
-            <h3>Nota de autor:</h3>
-            <p>
-                Mediante la visualización, es evidente que FC Barcelona es quien predomina el número de goles de local. Mientras que Real Madrid sólo lo supera a su archirival en dos ocaciones.
-            </p>
+    <!-- ── Sidebar emergente (izquierda = RM, derecha = FCB vía JS) ─────── -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3 id="panel-title">Detalle de temporada</h3>
+            <button class="close-btn" id="close-btn">✕</button>
+        </div>
+        <div class="sidebar-content">
+            <div class="stats-card" id="stats-container">
+                <p>Haz clic en un punto del gráfico para ver el detalle.</p>
+            </div>
+            <div class="chart-container-small">
+                <canvas id="detailChart"></canvas>
+            </div>
         </div>
     </div>
+
+    <!-- ── Contenido principal ──────────────────────────────────────────── -->
+    <div class="main-content" id="main-content">
+        <header>
+            <h1>Impacto de la Localía</h1>
+            <p>Real Madrid vs FC Barcelona · LaLiga 2016–2022</p>
+            <p>Haz clic en cualquier punto de los gráficos para ver el detalle de esa temporada.</p>
+        </header>
+
+        <div class="charts-wrapper">
+
+            <!-- Gráfico Real Madrid — sidebar abre a la izquierda -->
+            <div class="chart-box">
+                <h3>⚽ Real Madrid</h3>
+                <div class="canvas-wrapper">
+                    <canvas id="chartRM"></canvas>
+                </div>
+            </div>
+
+            <!-- Gráfico FC Barcelona — sidebar abre a la derecha -->
+            <div class="chart-box">
+                <h3>⚽ FC Barcelona</h3>
+                <div class="canvas-wrapper">
+                    <canvas id="chartFCB"></canvas>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Chart.js debe ir antes que app.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/app.js" defer></script>
 
 </body>
 </html>
