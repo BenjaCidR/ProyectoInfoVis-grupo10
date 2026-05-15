@@ -5,7 +5,7 @@ Visualización web interactiva que analiza el efecto de jugar como local frente 
 
 ---
 
-## Estructura del proyecto
+## Estructura general del proyecto
 
 ```
 proyecto/
@@ -16,6 +16,7 @@ proyecto/
 │   └── app.js
 ├── data/
 │   └── data.json
+│   └── bdds.xlsx
 ├── audio/
 │   ├── hala_madrid.m4a
 │   ├── messi.m4a
@@ -29,17 +30,7 @@ proyecto/
 
 ## Cómo ejecutar
 
-El proyecto requiere un servidor local para cargar `data/data.json` correctamente (los navegadores bloquean `fetch()` sobre `file://`).
-
-```bash
-# Con Python 3
-python -m http.server 8000
-
-# Con Node.js (npx)
-npx serve .
-```
-
-Luego abrir `http://localhost:8000` en el navegador.
+Vía githubpages: https://benjacidr.github.io/ProyectoInfoVis-grupo10/
 
 ---
 
@@ -60,14 +51,14 @@ Al hacer clic en cualquier punto o zona del gráfico, se abren dos paneles de fo
 - Cada sidebar incluye un gráfico de barras de goles local vs visita y un gráfico de distribución de frecuencia de partidos según los goles anotados (0, 1, 2, 3+).
 
 ### Sonificación condicional
-Al hacer clic **directamente sobre un punto** del gráfico, se reproduce un audio según el equipo y el resultado de localía de esa temporada:
+Al hacer clic **específicamente sobre un punto** del gráfico, se reproduce un audio según el equipo y el resultado de localía de esa temporada:
 
 | Equipo | Local > Visita | Visita > Local | Empate |
 |---|---|---|---|
 | Real Madrid | `hala_madrid.m4a` | `abucheo.mp3` | Silencio |
 | FC Barcelona | `messi.m4a` | `abucheo.mp3` | Silencio |
 
-Si se hace clic fuera de un punto (pero dentro del área del gráfico), los sidebars igual se abren pero no se reproduce sonido. Los audios no se superponen: cualquier audio previo se detiene antes de reproducir el nuevo.
+Si se hace clic fuera de un punto (pero dentro del área del gráfico), los sidebars igual se abren pero **no se reproduce sonido**. Los audios no se superponen: cualquier audio previo se detiene antes de reproducir el nuevo.
 
 ---
 
@@ -96,37 +87,3 @@ Si se hace clic fuera de un punto (pero dentro del área del gráfico), los side
 | FCB Visita (sidebar) | `#E8537A` |
 
 ---
-
-## Estructura de `data.json`
-
-```json
-{
-  "realMadrid": [
-    {
-      "temporada": "16-17",
-      "local": 48,
-      "visita": 58,
-      "partidos": 19,
-      "promedioLocal": 2.53,
-      "promedioVisita": 3.05,
-      "partidosDetalle": [
-        { "condicion": "local", "goles": 2 },
-        { "condicion": "visita", "goles": 3 }
-      ]
-    }
-  ],
-  "barcelona": [ ... ]
-}
-```
-
-El array `partidosDetalle` alimenta el gráfico de distribución de frecuencia en los sidebars.
-
----
-
-## Decisiones de diseño destacadas
-
-**Detección de equipo por proximidad geométrica.** El `onClick` usa `getElementsAtEventForMode` con `mode: 'nearest'` e `intersect: true` para identificar qué línea fue tocada con precisión, en lugar de depender del orden de los datasets que devuelve `mode: 'index'`.
-
-**Separación anti-solapamiento de etiquetas.** El plugin `inlineLabelPlugin` ordena las etiquetas por posición Y y aplica un desplazamiento mínimo de 14px entre ellas, evitando que se monten cuando dos líneas convergen al final del gráfico.
-
-**Sincronización de sidebars con animación CSS.** Los paneles usan `position: fixed` con transición `cubic-bezier` y ajustan los márgenes del contenido principal dinámicamente, preservando la legibilidad del gráfico aunque ambos paneles estén abiertos.
