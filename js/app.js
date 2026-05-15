@@ -21,6 +21,74 @@ const state = { rmOpen: false, fcbOpen: false };
 // Instancias Chart.js activas (para destruir antes de recrear)
 const detailInstances = {};
 
+// ─── Gestión de audio ─────────────────────────────────────────────────────────
+let audioActual = null;
+
+const AUDIOS = {
+    realMadrid: {
+        gana:   'audio/hala_madrid.m4a',
+        pierde: 'audio/abucheo.mp3'
+    },
+    barcelona: {
+        gana:   'audio/messi.m4a',
+        pierde: 'audio/abucheo.mp3'
+    }
+};
+
+/**
+ * reproducirSonido(equipo, data)
+ * @param {string} equipo  — 'realMadrid' | 'barcelona'
+ * @param {object} data    — objeto de la temporada: { local, visita, ... }
+ *
+ * Lógica:
+ *  - Local > Visita  → el equipo "ganó" en casa → sonido celebración
+ *  - Visita > Local  → el equipo rindió mejor fuera → abucheo en casa
+ *  - Local === Visita → empate exacto → silencio
+ *
+ * Cualquier audio previo se detiene antes de reproducir el nuevo,
+ * evitando solapamientos en clics rápidos.
+ */
+function reproducirSonido(equipo, data) {
+    // Forzar números por si el JSON trae strings
+    const local  = Number(data.local);
+    const visita = Number(data.visita);
+
+    console.group(`🔊 reproducirSonido → ${equipo} | temporada: ${data.temporada}`);
+    console.log(`   local=${local}, visita=${visita}`);
+
+    if (local === visita) {
+        console.log('   → Empate exacto, sin sonido.');
+        console.groupEnd();
+        return;
+    }
+
+    const resultado = local > visita ? 'gana' : 'pierde';
+    const ruta = AUDIOS[equipo][resultado];
+    console.log(`   → resultado: ${resultado} | ruta: ${ruta}`);
+
+    if (audioActual) {
+        audioActual.pause();
+        audioActual.currentTime = 0;
+    }
+
+    audioActual = new Audio(ruta);
+
+    // Confirmar que el archivo cargó antes de intentar reproducir
+    audioActual.addEventListener('canplaythrough', () => {
+        console.log(`   ✅ Audio listo para reproducir: ${ruta}`);
+    }, { once: true });
+
+    audioActual.addEventListener('error', (e) => {
+        console.error(`   ❌ Error cargando audio: ${ruta}`, e.target.error);
+    }, { once: true });
+
+    audioActual.play()
+        .then(() => console.log(`   ▶️  Reproduciendo: ${ruta}`))
+        .catch(err => console.error(`   🚫 play() bloqueado:`, err));
+
+    console.groupEnd();
+}
+
 // ─── Recalcular márgenes del main-content ─────────────────────────────────────
 function actualizarMargenes(mainContent) {
     if (window.innerWidth <= 768) {
@@ -114,7 +182,8 @@ function inicializarGrafico(matchData, sidebarRM, sidebarFCB, mainContent) {
     const labels = matchData.realMadrid.map(d => d.temporada);
     const ctx    = document.getElementById('chartCombinado').getContext('2d');
 
-    new Chart(ctx, {
+    // Guardamos la instancia para poder usarla en onClick con getElementsAtEventForMode
+    const chartInstance = new Chart(ctx, {
         type: 'line',
         plugins: [inlineLabelPlugin],
         data: {
@@ -181,7 +250,26 @@ function inicializarGrafico(matchData, sidebarRM, sidebarFCB, mainContent) {
             },
             onClick: (event, elements) => {
                 if (!elements.length) return;
+
                 const idx = elements[0].index;
+
+                // Solo reproducir audio si el clic fue directo sobre un punto
+                const nearest = chartInstance.getElementsAtEventForMode(
+                    event.native, 'nearest', { intersect: true }, false
+                );
+
+                if (nearest.length > 0) {
+                    const datasetIdx = nearest[0].datasetIndex;
+                    const equipo     = datasetIdx <= 1 ? 'realMadrid' : 'barcelona';
+                    const dataAudio  = equipo === 'realMadrid'
+                        ? matchData.realMadrid[idx]
+                        : matchData.barcelona[idx];
+
+                    console.log(`🖱️ onClick → idx=${idx}, datasetIdx=${datasetIdx}, equipo=${equipo}`);
+                    reproducirSonido(equipo, dataAudio);
+                }
+
+                // Los sidebars siempre se abren al hacer clic en el área del gráfico
                 abrirAmbosDetalles(
                     matchData.realMadrid[idx],
                     matchData.barcelona[idx],
