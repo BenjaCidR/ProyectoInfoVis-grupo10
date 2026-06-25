@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balanza de Localía - Real Madrid vs FC Barcelona</title>
+    <link rel="stylesheet" href="css/balanza.css">
+</head>
+<body>
+
+    <div class="contenedor">
+        <a href="index.html" class="volver">← Volver a la visualización principal</a>
+        <h1>Balanza de Localía</h1>
+        <p class="subtitulo">Escanea dos cubos para comparar su efecto de localía</p>
+
+        <div class="controles">
+            <button id="btn-start">Iniciar cámara</button>
+            <button id="btn-reset">Reiniciar lectura</button>
+        </div>
+
+        <div class="camara-wrapper">
+            <video id="video" autoplay playsinline muted></video>
+            <canvas id="overlay"></canvas>
+            <div id="placeholder">
+                Apunta la cámara a la balanza con ambos cubos puestos<br>
+                y presiona "Iniciar cámara"
+            </div>
+        </div>
+
+        <div class="tarjetas">
+            <div class="tarjeta" id="card-a">
+                <p class="tarjeta-label">Cubo A</p>
+                <p class="tarjeta-equipo" id="card-a-label">Sin leer</p>
+                <p class="tarjeta-stat" id="card-a-stat">—</p>
+            </div>
+            <div class="tarjeta" id="card-b">
+                <p class="tarjeta-label">Cubo B</p>
+                <p class="tarjeta-equipo" id="card-b-label">Sin leer</p>
+                <p class="tarjeta-stat" id="card-b-stat">—</p>
+            </div>
+        </div>
+
+        <div id="status-banner">Esperando ambos cubos</div>
+
+        <p id="debug-info"></p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script src="js/balanza.js" defer></script>
+
+</body>
+</html>
