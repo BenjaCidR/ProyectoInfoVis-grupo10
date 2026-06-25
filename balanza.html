@@ -11,36 +11,74 @@
     <div class="contenedor">
         <a href="index.html" class="volver">← Volver a la visualización principal</a>
         <h1>Balanza de Localía</h1>
-        <p class="subtitulo">Escanea dos cubos para comparar su efecto de localía</p>
+        <p class="subtitulo">Escanea ambos cubos, calibra la balanza vacía, y luego pon los cubos para ver cuál la inclina</p>
 
         <div class="controles">
             <button id="btn-start">Iniciar cámara</button>
-            <button id="btn-reset">Reiniciar lectura</button>
+            <button id="btn-calibrate" disabled>Calibrar nivel</button>
+            <button id="btn-reset">Reiniciar</button>
         </div>
 
         <div class="camara-wrapper">
             <video id="video" autoplay playsinline muted></video>
             <canvas id="overlay"></canvas>
             <div id="placeholder">
-                Apunta la cámara a la balanza con ambos cubos puestos<br>
+                Apunta de frente a la balanza, con buena luz<br>
                 y presiona "Iniciar cámara"
             </div>
         </div>
 
         <div class="tarjetas">
             <div class="tarjeta" id="card-a">
-                <p class="tarjeta-label">Cubo A</p>
-                <p class="tarjeta-equipo" id="card-a-label">Sin leer</p>
+                <p class="tarjeta-label">Cubo izquierdo</p>
+                <p class="tarjeta-equipo" id="card-a-label">Sin leer QR</p>
                 <p class="tarjeta-stat" id="card-a-stat">—</p>
+                <p class="tarjeta-altura" id="card-a-height">Canastilla: sin detectar</p>
             </div>
             <div class="tarjeta" id="card-b">
-                <p class="tarjeta-label">Cubo B</p>
-                <p class="tarjeta-equipo" id="card-b-label">Sin leer</p>
+                <p class="tarjeta-label">Cubo derecho</p>
+                <p class="tarjeta-equipo" id="card-b-label">Sin leer QR</p>
                 <p class="tarjeta-stat" id="card-b-stat">—</p>
+                <p class="tarjeta-altura" id="card-b-height">Canastilla: sin detectar</p>
             </div>
         </div>
 
-        <div id="status-banner">Esperando ambos cubos</div>
+        <div id="status-banner">Paso 1: escanea ambos cubos</div>
+
+        <details class="ajustes">
+            <summary>Ajustes de calibración</summary>
+            <div class="ajustes-contenido">
+                <div class="ajuste-fila">
+                    <label for="threshold">Umbral de caída (px)</label>
+                    <input type="range" id="threshold" min="5" max="60" value="18" step="1">
+                    <span id="threshold-val">18px</span>
+                </div>
+                <div class="ajuste-fila">
+                    <label for="brightness">Brillo mínimo blanco</label>
+                    <input type="range" id="brightness" min="120" max="240" value="180" step="5">
+                    <span id="brightness-val">180</span>
+                </div>
+                <p class="ajustes-nota">
+                    Presiona "Calibrar nivel" con la balanza vacía y nivelada — eso guarda la altura de
+                    referencia de cada canastilla antes de poner los cubos. El umbral de caída define
+                    cuántos píxeles debe bajar una canastilla respecto a esa referencia para considerarse
+                    "ganadora".
+                </p>
+            </div>
+        </details>
+
+        <div class="audios">
+            <div class="audio-card">
+                <p class="audio-label">Audio victoria</p>
+                <input type="file" id="audio-win" accept="audio/*">
+                <p id="audio-win-name" class="audio-name">Sin audio cargado</p>
+            </div>
+            <div class="audio-card">
+                <p class="audio-label">Audio derrota</p>
+                <input type="file" id="audio-lose" accept="audio/*">
+                <p id="audio-lose-name" class="audio-name">Sin audio cargado</p>
+            </div>
+        </div>
 
         <p id="debug-info"></p>
     </div>

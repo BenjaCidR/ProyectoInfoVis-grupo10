@@ -1,8 +1,7 @@
 :root {
-    --color-rm: #005A9F;
-    --color-fcb: #A50044;
     --color-ok: #1D9E75;
     --color-fail: #D85A30;
+    --color-warn: #C99A2E;
     --color-bg-card: #f4f4f4;
     --color-text-muted: #777;
 }
@@ -46,6 +45,7 @@ h1 {
     font-size: 0.9rem;
     margin-top: 0;
     margin-bottom: 1.25rem;
+    line-height: 1.4;
 }
 
 .controles {
@@ -60,7 +60,7 @@ h1 {
     border-radius: 8px;
     border: 1px solid #ccc;
     background: white;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     cursor: pointer;
 }
 
@@ -143,6 +143,12 @@ h1 {
     margin: 4px 0 0;
 }
 
+.tarjeta-altura {
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+    margin: 6px 0 0;
+}
+
 .tarjeta.gana {
     background: rgba(29, 158, 117, 0.15);
 }
@@ -153,13 +159,14 @@ h1 {
 
 #status-banner {
     text-align: center;
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 600;
     padding: 0.7rem;
     border-radius: 8px;
     background: var(--color-bg-card);
     color: var(--color-text-muted);
     margin-bottom: 1rem;
+    line-height: 1.4;
 }
 
 #status-banner.gana {
@@ -167,13 +174,89 @@ h1 {
     color: var(--color-ok);
 }
 
-#status-banner.empate {
-    background: var(--color-bg-card);
+#status-banner.espera {
+    background: rgba(201, 154, 46, 0.15);
+    color: var(--color-warn);
+}
+
+.ajustes {
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+}
+
+.ajustes summary {
+    cursor: pointer;
     color: var(--color-text-muted);
 }
 
-#debug-info {
+.ajustes-contenido {
+    padding-top: 0.75rem;
+}
+
+.ajuste-fila {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.ajuste-fila label {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    min-width: 150px;
+}
+
+.ajuste-fila input[type="range"] {
+    flex: 1;
+}
+
+.ajuste-fila span {
+    font-size: 0.8rem;
+    font-weight: 600;
+    min-width: 36px;
+    text-align: right;
+}
+
+.ajustes-nota {
     font-size: 0.75rem;
+    color: #999;
+    margin: 8px 0 0;
+    line-height: 1.4;
+}
+
+.audios {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 1rem;
+}
+
+.audio-card {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+}
+
+.audio-label {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    margin: 0 0 6px;
+}
+
+.audio-card input[type="file"] {
+    font-size: 0.75rem;
+    width: 100%;
+}
+
+.audio-name {
+    font-size: 0.7rem;
+    color: #aaa;
+    margin: 6px 0 0;
+}
+
+#debug-info {
+    font-size: 0.72rem;
     color: #aaa;
     text-align: center;
 }
