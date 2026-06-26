@@ -20,8 +20,9 @@ const database = [
 // ──────────────────────────────────────────────────────────────────
 // Audios: reemplaza estas rutas por tus archivos finales
 // ──────────────────────────────────────────────────────────────────
-const audioWin  = new Audio('audio/victoria.mp3');
-const audioLose = new Audio('audio/derrota.mp3');
+const audioWin      = new Audio('audio/victoria.mp3');          // Real Madrid
+const audioWinBarca = new Audio('audio/victoria_barcelona.mp3'); // FC Barcelona
+const audioLose     = new Audio('audio/derrota.mp3');
 
 // ──────────────────────────────────────────────────────────────────
 // Referencias al DOM
@@ -77,9 +78,9 @@ function formatEffect(row) {
     return (eff >= 0 ? '+' : '') + eff;
 }
 
-function playSound(key) {
-    [audioWin, audioLose].forEach(a => { a.pause(); a.currentTime = 0; });
-    const el = { win: audioWin, lose: audioLose }[key];
+function playSound(key, teamAudio) {
+    [audioWin, audioWinBarca, audioLose].forEach(a => { a.pause(); a.currentTime = 0; });
+    const el = teamAudio || { win: audioWin, lose: audioLose }[key];
     if (el) {
         el.currentTime = 0;
         el.play().catch(() => {});
@@ -99,8 +100,9 @@ function setupAudioInput(inputId, nameId, targetAudio) {
         nameEl.textContent = file.name;
     });
 }
-setupAudioInput('audio-win', 'audio-win-name', audioWin);
-setupAudioInput('audio-lose', 'audio-lose-name', audioLose);
+setupAudioInput('audio-win',       'audio-win-name',       audioWin);
+setupAudioInput('audio-win-barca', 'audio-win-barca-name', audioWinBarca);
+setupAudioInput('audio-lose',      'audio-lose-name',      audioLose);
 
 thresholdSlider.addEventListener('input', () => {
     thresholdVal.textContent = thresholdSlider.value + 'px';
@@ -363,6 +365,7 @@ function announceWinner(side, winnerRow, loserRow) {
 
     if (lastTriggeredKey !== side) {
         lastTriggeredKey = side;
-        playSound('win');
+        const winnerAudio = winnerRow.team === 'FC Barcelona' ? audioWinBarca : audioWin;
+        playSound('win', winnerAudio);
     }
 }
